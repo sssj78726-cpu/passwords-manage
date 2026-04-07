@@ -135,15 +135,21 @@ def show_habits(user_id):
     conn.close()
 
 def get_weather():
-    url = 'https://yandex.ru/pogoda/ru/saint-petersburg?ysclid=mnoofjl360975921636&lat=59.938784&lon=30.314997'
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text,'html.parser')
-  
-    temp = soup.find('span', class_="AppFactTemperature_value__2qhsG")
-    if temp:
-        print(temp.text)
+    city = input('city: ').lower()
+    url = f'https://yandex.ru/pogoda/ru/{city}'
+    if url:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text,'html.parser')
+        temp = soup.find('span', class_="AppFactTemperature_value__2qhsG")
+        simvl = soup.find('span', class_="AppFactTemperature_sign__1MeN4 AppFactTemperature_attr__8pcxc")
+        feel_today = soup.find('span', class_="AppFact_feels__base__bw86b")
+        if temp:
+            print('temperature:',simvl.text+temp.text+'C')
+            print(feel_today.text)
+        else:
+            print('error')
     else:
-        print('not now')
+        print('unknown city!')
 
 
 
@@ -171,7 +177,7 @@ def Main():
                         print('5 - add habits')
                         print('6 - mark a habits')
                         print('7 - show habits')
-                        print('8 - get weather in SPB')
+                        print('8 - get weather')
                         actions ={
                             1:lambda:add_password(user_id),
                             2:lambda:show_passwords(user_id),
