@@ -1,7 +1,8 @@
 import sqlite3
 import hashlib
 import datetime
-
+import requests
+from bs4 import BeautifulSoup
 
 
 conn = sqlite3.connect('datete.db')
@@ -41,6 +42,7 @@ def registr(login,password):
         return False
     finally:
         conn.close()
+
 
 def Login(password,login):
     conn = sqlite3.connect('datete.db')
@@ -119,48 +121,82 @@ def mark_complete(user_id):
     conn.close()
     print('you mark habit!')
 
+def show_habits(user_id):
+    conn = sqlite3.connect('datete.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM habits")
+    fst = cursor.fetchall()
+    cursor.execute("SELECT complete FROM habits_logs")
+    scnd = cursor.fetchall()
+    for f in fst:
+        print(f)
+    for s in scnd:
+        print(f'completed:{s}')
+    conn.close()
+
+def get_weather():
+    url = 'https://yandex.ru/pogoda/ru/saint-petersburg?ysclid=mnoofjl360975921636&lat=59.938784&lon=30.314997'
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text,'html.parser')
+  
+    temp = soup.find('span', class_="AppFactTemperature_value__2qhsG")
+    if temp:
+        print(temp.text)
+    else:
+        print('not now')
+
+
 
 def Main():
     while True:
-        print('1-registr')
-        print('2- log in')
-        print('3- exit')
-        choice = int(input('your choice: '))
-        if choice == 1:
-            login = input('login: ')
-            password = input('password: ')
-            registr(login,password)
-        elif choice == 2: 
-            login = input('login: ')
-            password = input('password: ')
-            user_id = Login(password,login)
-            if user_id:
-                while True:
-                    print('1- add password')
-                    print('2- show passwords')
-                    print('3- leave from account')
-                    print('4- exit')
-                    print('5 - add habits')
-                    print('6 - mark a habits')
-                    choice2 = int(input('your choice: '))
-                    if choice2 == 1:
-                        add_password(user_id)
-                    elif choice2 == 2:
-                        show_passwords(user_id)
-                    elif choice2 == 3:
-                        break
-                    elif choice2 == 4:
-                        choice = 3
-                        break
-                    elif choice2 == 5:
-                        add_habits(user_id)
-                    elif choice2 == 6:
-                        mark_complete(user_id)
-                    else:
-                        return 'unknown choice!'
-        elif choice == 3:
-            break
-        else: return 'Unknown choice!'
+        try:
+            print('1-registr')
+            print('2- log in')
+            print('3- exit')
+            choice = int(input('your choice: '))
+            if choice == 1:
+                login = input('login: ')
+                password = input('password: ')
+                registr(login,password)
+            elif choice == 2: 
+                login = input('login: ')
+                password = input('password: ')
+                user_id = Login(password,login)
+                if user_id:
+                    while True:
+                        print('1- add password')
+                        print('2- show passwords')
+                        print('3- leave from account')
+                        print('4- exit')
+                        print('5 - add habits')
+                        print('6 - mark a habits')
+                        print('7 - show habits')
+                        print('8 - get weather in SPB')
+                        actions ={
+                            1:lambda:add_password(user_id),
+                            2:lambda:show_passwords(user_id),
+                            5:lambda:add_habits(user_id),
+                            6:lambda:mark_complete(user_id),
+                            7:lambda:show_habits(user_id),
+                            8:lambda:get_weather()
+                                }
+                        choice2 = int(input('your choice: '))
+                        if choice2 in actions:
+                            actions[choice2]()
+                        elif choice2 == 3:
+                            break
+                        elif choice2 == 4:
+                            choice == 3
+                            break
+                        else:
+                            return 'unknown choice!'
+            elif choice == 3:
+                break
+            else: return 'Unknown choice!'
+        except ValueError:
+            print('choise number')
+            return
+
 if __name__ == '__main__':
     Main()
 
