@@ -23,6 +23,10 @@ cursor.execute("SELECT habits.id,habits_logs.habit_id FROM habits_logs JOIN habi
 cursor.execute("SELECT users.id,passwords.user_id FROM passwords JOIN users ON users.id = passwords.user_id")
 
 cursor.execute("SELECT users.id,habits.user_id FROM habits JOIN users ON users.id = habits.user_id")
+
+cursor.execute("CREATE TABLE IF NOT EXISTS weather_hist (id INTEGER PRIMARY KEY,user_id INTEGER,feel TEXT,temp TEXT,city TEXT)")
+
+cursor.execute("SELECT users.id, weather_hist.user_id FROM weather_hist JOIN users ON users.id = weather_hist.user_id ")
 conn.commit()
 conn.close()
 
@@ -116,7 +120,7 @@ def mark_complete(user_id):
         print('today you mark this habt!')
         conn.close()
         return
-    cursor.execute("INSERT INTO habits_logs (habit_id,date,complete) VALUES (?,?,'Yes')",(habit_id,date))
+    cursor.execute("INSERT INTO habits_logs (habit_id,date,complete) VALUES (?,?,'Yes')",(habit_id,date,))
     conn.commit()
     conn.close()
     print('you mark habit!')
@@ -124,7 +128,7 @@ def mark_complete(user_id):
 def show_habits(user_id):
     conn = sqlite3.connect('datete.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM habits")
+    cursor.execute("SELECT name,goal FROM habits WHERE user_id =?",(user_id,))
     fst = cursor.fetchall()
     cursor.execute("SELECT complete FROM habits_logs")
     scnd = cursor.fetchall()
@@ -134,7 +138,11 @@ def show_habits(user_id):
         print(f'completed:{s}')
     conn.close()
 
-def get_weather():
+def get_weather(user_id):
+
+    conn = sqlite3.connect('datete.db')
+    cursor = conn.cursor()
+
     city = input('city: ').lower()
     url = f'https://yandex.ru/pogoda/ru/{city}'
     if url:
@@ -143,15 +151,29 @@ def get_weather():
         temp = soup.find('span', class_="AppFactTemperature_value__2qhsG")
         simvl = soup.find('span', class_="AppFactTemperature_sign__1MeN4 AppFactTemperature_attr__8pcxc")
         feel_today = soup.find('span', class_="AppFact_feels__base__bw86b")
-        if temp:
-            print('temperature:',simvl.text+temp.text+'C')
-            print(feel_today.text)
-        else:
-            print('error')
+        predict = soup.find('div' ,class_="AppFact_warning__second__BMdKC")
+        full_temp =simvl.text+temp.text
+        print('temperature:',full_temp)
+        print(feel_today.text)
+        print(predict.text)
+        cursor.execute("INSERT INTO weather_hist (user_id,temp,city) VALUES (?,?,?)",(user_id,full_temp,city,))
+        conn.commit()
+        conn.close()
     else:
         print('unknown city!')
 
+def Show_weather(user_id):
+    conn = sqlite3.connect('datete.db')
+    cursor = conn.cursor()
 
+    cursor.execute("SELECT temp,city FROM weather_hist WHERE user_id = ?",(user_id,))
+    weather = cursor.fetchall()
+    if weather:
+        for weat in weather:
+            print(weat)
+    else:
+        print('history not detected')
+    conn.close()
 
 def Main():
     while True:
@@ -170,21 +192,23 @@ def Main():
                 user_id = Login(password,login)
                 if user_id:
                     while True:
-                        print('1- add password')
-                        print('2- show passwords')
-                        print('3- leave from account')
-                        print('4- exit')
-                        print('5 - add habits')
-                        print('6 - mark a habits')
-                        print('7 - show habits')
-                        print('8 - get weather')
+                        print('1 -> add password')
+                        print('2 -> show passwords')
+                        print('3 -> leave from account')
+                        print('4 -> exit')
+                        print('5 -> add habits')
+                        print('6 -> mark a habits')
+                        print('7 -> show habits')
+                        print('8 -> get weather')
+                        print('9 -> show weather history')
                         actions ={
                             1:lambda:add_password(user_id),
                             2:lambda:show_passwords(user_id),
                             5:lambda:add_habits(user_id),
                             6:lambda:mark_complete(user_id),
                             7:lambda:show_habits(user_id),
-                            8:lambda:get_weather()
+                            8:lambda:get_weather(user_id),
+                            9:lambda:Show_weather(user_id)
                                 }
                         choice2 = int(input('your choice: '))
                         if choice2 in actions:
@@ -205,6 +229,6 @@ def Main():
 
 if __name__ == '__main__':
     Main()
-
+#WEATHER IN RUSSIA
 
 
