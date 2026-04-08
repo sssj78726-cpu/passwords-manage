@@ -192,34 +192,66 @@ def Main():
                 user_id = Login(password,login)
                 if user_id:
                     while True:
-                        print('1 -> add password')
-                        print('2 -> show passwords')
-                        print('3 -> leave from account')
+                        print('1 -> passwords for site')
+                        print('2 -> habits')
+                        print('3 -> weather')
                         print('4 -> exit')
-                        print('5 -> add habits')
-                        print('6 -> mark a habits')
-                        print('7 -> show habits')
-                        print('8 -> get weather')
-                        print('9 -> show weather history')
-                        actions ={
-                            1:lambda:add_password(user_id),
-                            2:lambda:show_passwords(user_id),
-                            5:lambda:add_habits(user_id),
-                            6:lambda:mark_complete(user_id),
-                            7:lambda:show_habits(user_id),
-                            8:lambda:get_weather(user_id),
-                            9:lambda:Show_weather(user_id)
-                                }
-                        choice2 = int(input('your choice: '))
-                        if choice2 in actions:
-                            actions[choice2]()
-                        elif choice2 == 3:
-                            break
-                        elif choice2 == 4:
-                            choice == 3
+                        choice3 = int(input('choice: '))
+                        if choice3 == 1:
+                                while True:
+                                    passw = {
+                                        1:lambda:add_password(user_id),
+                                        2:lambda:show_passwords(user_id)
+                                        }
+                                    print('1 -> add password')
+                                    print('2 -> show passwords')
+                                    print('3 -> exit')
+                                    choice2 = int(input('choice: '))
+                                    if choice2 in passw:
+                                        passw[choice2]()
+                                    elif choice2 == 3:
+                                        break
+                                    else:
+                                        return'unknown choice'
+                        elif choice3 == 2:
+                            while True:
+                                habbit = {
+                                    1:lambda:add_habits(user_id),
+                                    2:lambda:mark_complete(user_id),
+                                    3:lambda:show_habits(user_id)
+                                    }
+                                print('1 -> add habits')
+                                print('2 -> mark a habits')
+                                print('3 -> show habits')
+                                print('4 -> exit')
+                                choice2 = int(input('choice: '))
+                                if choice2 in habbit:
+                                    habbit[choice2]()
+                                elif choice2 == 4:
+                                    break
+                                else:
+                                    return 'unknown choice'
+                        elif choice3 == 3:
+                            while True:
+                                weath ={
+                                    1:lambda:get_weather(user_id),
+                                    2:lambda:Show_weather(user_id)
+                                    }
+
+                                print('1 -> get weather')
+                                print('2 -> show weather history')
+                                print('3 -> exit')
+                                choice2 = int(input('your choice: '))
+                                if choice2 in weath:
+                                    weath[choice2]()
+                                elif choice2 == 3:
+                                    break
+                            else:
+                                return 'unknown choice!'
+                        elif choice3 == 4:
                             break
                         else:
-                            return 'unknown choice!'
+                            return'unknown choice'
             elif choice == 3:
                 break
             else: return 'Unknown choice!'
@@ -229,6 +261,5 @@ def Main():
 
 if __name__ == '__main__':
     Main()
-#WEATHER IN RUSSIA
 
-
+#RUSSIAN WEATHER!!!
