@@ -4,7 +4,6 @@ import datetime
 import requests
 from bs4 import BeautifulSoup
 
-
 conn = sqlite3.connect('datete.db')
 cursor = conn.cursor()
 
@@ -29,6 +28,7 @@ cursor.execute("CREATE TABLE IF NOT EXISTS weather_hist (id INTEGER PRIMARY KEY,
 cursor.execute("SELECT users.id, weather_hist.user_id FROM weather_hist JOIN users ON users.id = weather_hist.user_id ")
 conn.commit()
 conn.close()
+
 
 def registr(login,password):
     print("WELCOME")
@@ -138,11 +138,47 @@ def show_habits(user_id):
         print(f'completed:{s}')
     conn.close()
 
-def get_weather(user_id):
-
+def delet_habit(user_id):
     conn = sqlite3.connect('datete.db')
     cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id,name FROM habits WHERE user_id = ?",(user_id,))
+        habits = cursor.fetchall()
+        if not habits:
+            print('you dont have habits!')
+            conn.close()
+            return
+        else:
+            for habit_id,name in habits:
+                print(habit_id,name)
+        try:
+            habit_id = int(input('ID: '))
+        except ValueError:
+            print('error,print number!')
+            conn.close()
+            return
+        if habit_id:
+            cursor.execute("SELECT id FROM habits WHERE id = ? AND user_id = ?",(habit_id,user_id,))            
+            if cursor.fetchone() is None:
+                print('its not you or you dont have this habits')
+                conn.close()
+                return
+            cursor.execute("DELETE FROM habits WHERE id = ?",(habit_id,))
+            conn.commit()
+            print('habit deleted')
+        else :
+            print('this habit not in base')
+            conn.close()
+            return
+    except:
+        return('error')
+    finally:
+        conn.close()
 
+
+def get_weather(user_id):
+    conn = sqlite3.connect('datete.db')
+    cursor = conn.cursor()
     city = input('city: ').lower()
     url = f'https://yandex.ru/pogoda/ru/{city}'
     if url:
@@ -161,6 +197,8 @@ def get_weather(user_id):
         conn.close()
     else:
         print('unknown city!')
+        conn.close()
+        return
 
 def Show_weather(user_id):
     conn = sqlite3.connect('datete.db')
@@ -218,16 +256,18 @@ def Main():
                                 habbit = {
                                     1:lambda:add_habits(user_id),
                                     2:lambda:mark_complete(user_id),
-                                    3:lambda:show_habits(user_id)
+                                    3:lambda:show_habits(user_id),
+                                    4:lambda:delet_habit(user_id)
                                     }
                                 print('1 -> add habits')
                                 print('2 -> mark a habits')
                                 print('3 -> show habits')
-                                print('4 -> exit')
+                                print('4 -> delete habit')
+                                print('5 -> exit')
                                 choice2 = int(input('choice: '))
                                 if choice2 in habbit:
                                     habbit[choice2]()
-                                elif choice2 == 4:
+                                elif choice2 == 5:
                                     break
                                 else:
                                     return 'unknown choice'
@@ -261,5 +301,4 @@ def Main():
 
 if __name__ == '__main__':
     Main()
-
 #RUSSIAN WEATHER!!!
