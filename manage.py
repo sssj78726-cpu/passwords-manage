@@ -29,62 +29,69 @@ cursor.execute("SELECT users.id, weather_hist.user_id FROM weather_hist JOIN use
 conn.commit()
 conn.close()
 
+class User:
+    def __init__(self,login,password):
+        self.login = login
+        self.password = password
+        
+    def registr(self,login,password):
+        print("WELCOME")
+        conn = sqlite3.connect('datete.db')
+        cursor = conn.cursor()
+        self.hash_obj = hashlib.sha256(password.encode())
+        self.hash_hex = self.hash_obj.hexdigest()
+        try:
+            cursor.execute("INSERT INTO users (login,password_hash) VALUES (?,?)",(login,self.hash_hex))
+            conn.commit()
+            print('secssuseful')
+            return True
+        except sqlite3.IntegrityError:
+            print('login in base')
+            return False
+        finally:
+            conn.close()
 
-def registr(login,password):
-    print("WELCOME")
-    conn = sqlite3.connect('datete.db')
-    cursor = conn.cursor()
-    hash_obj = hashlib.sha256(password.encode())
-    hash_hex = hash_obj.hexdigest()
-    try:
-        cursor.execute("INSERT INTO users (login,password_hash) VALUES (?,?)",(login,hash_hex))
-        conn.commit()
-        print('secssuseful')
-        return True
-    except sqlite3.IntegrityError:
-        print('login in base')
-        return False
-    finally:
+    def Login(self,password,login):
+        conn = sqlite3.connect('datete.db')
+        cursor = conn.cursor()
+        self.hash_obj = hashlib.sha256(password.encode())
+        self.hash_hex = self.hash_obj.hexdigest()
+        cursor.execute("SELECT id FROM users WHERE login = ? AND password_hash = ?",(login,self.hash_hex))
+        self.user = cursor.fetchone()
         conn.close()
+        if self.user:
+            print('sucsesseful log in')
+            return self.user[0]
+        else:
+            print('bad login or password')
+            return None
 
-
-def Login(password,login):
-    conn = sqlite3.connect('datete.db')
-    cursor = conn.cursor()
-    hash_obj = hashlib.sha256(password.encode())
-    hash_hex = hash_obj.hexdigest()
-    cursor.execute("SELECT id FROM users WHERE login = ? AND password_hash = ?",(login,hash_hex))
-    user = cursor.fetchone()
-    conn.close()
-    if user:
-        print('sucsesseful log in')
-        return user[0]
-    else:
-        print('bad login or password')
-        return None
-
-def add_password(user_id):
-    conn = sqlite3.connect('datete.db')
-    cursor = conn.cursor()
-    login = input('login: ')
-    site = input('site: ')
-    password = input('password: ')
-    cursor.execute("INSERT INTO passwords (user_id,site,login,password) VALUES (?,?,?,?)",(user_id,site,login,password))
-    conn.commit()
-    conn.close()
-    print('password save!')
-
-def show_passwords(user_id):
-    conn = sqlite3.connect('datete.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT site,login,password FROM passwords WHERE user_id = ?",(user_id,))
-    rows = cursor.fetchall()
-    conn.close()
-    if not rows:
-        print('none password')
-    else:
-        for site,login,password in rows:
-            print(f'site: {site},login: {login},password: {password}')
+class Passwords:
+    def __init__(self):
+        self.site = ''
+        self.login = ''
+        self.password = None
+    def add_password(self,user_id):
+        conn = sqlite3.connect('datete.db')
+        cursor = conn.cursor()
+        self.login = input('login: ')
+        self.site = input('site: ')
+        self.password = input('password: ')
+        cursor.execute("INSERT INTO passwords (user_id,site,login,password) VALUES (?,?,?,?)",(user_id,self.site,self.login,self.password))
+        conn.commit()
+        conn.close()
+        print('password save!')
+    def show_passwords(self,user_id):
+        conn = sqlite3.connect('datete.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT site,login,password FROM passwords WHERE user_id = ?",(user_id,))
+        self.rows = cursor.fetchall()
+        conn.close()
+        if not self.rows:
+            print('none password')
+        else:
+            for self.site,self.login,self.password in self.rows:
+                print(f'site: {self.site},login: {self.login},password: {self.password}')
 
 def add_habits(user_id):
     conn = sqlite3.connect('datete.db')
@@ -223,11 +230,13 @@ def Main():
             if choice == 1:
                 login = input('login: ')
                 password = input('password: ')
-                registr(login,password)
+                user = User(login,password)
+                user.registr(login,password)
             elif choice == 2: 
                 login = input('login: ')
                 password = input('password: ')
-                user_id = Login(password,login)
+                user = User(login,password)
+                user_id = user.Login(password,login)
                 if user_id:
                     while True:
                         print('1 -> passwords for site')
@@ -237,9 +246,10 @@ def Main():
                         choice3 = int(input('choice: '))
                         if choice3 == 1:
                                 while True:
+                                    passwo = Passwords()
                                     passw = {
-                                        1:lambda:add_password(user_id),
-                                        2:lambda:show_passwords(user_id)
+                                        1:lambda:passwo.add_password(user_id),
+                                        2:lambda:passwo.show_passwords(user_id)
                                         }
                                     print('1 -> add password')
                                     print('2 -> show passwords')
